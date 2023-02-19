@@ -37,6 +37,7 @@ int main(int argc, char *argv[]){
 	fd_set base_rfds, rfds; 
     int fdmax = 0; 
     char line[MAXLINE];
+    char userid[500];
 
 
 	conn_fd = socket(AF_INET, SOCK_STREAM, 0); 
@@ -46,10 +47,14 @@ int main(int argc, char *argv[]){
 	serv_addr.sin_port = htons(SERV_PORT);
 	
 	serv_addr.sin_addr.s_addr = inet_addr(SERV_IP);
-    if (connect(conn_fd, (struct sockaddr *) &serv_addr, sizeof(serv_addr))<0) { 
+    if (connect(conn_fd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0) { 
         perror("Problem in connecting to the server");
         exit(3);
     }
+
+    // read(conn_fd, client_id, MAXLINE);
+    // printf("%s", client_id);
+    // fflush(stdout);
 
 	FD_ZERO(&base_rfds);
 	FD_ZERO(&rfds);
@@ -98,11 +103,12 @@ int main(int argc, char *argv[]){
 				}
 			}
 			else{
-
-
-				//printf("receive %s with m = %d characters\n", line, m);
+				
+				// sprintf(userid, "cli-%s:> ", line);
+				// fputs(userid, stdout);
+				
 				fputs(line, stdout);
-
+				fflush(stdout);
 			}
 		}
 	}
@@ -116,7 +122,7 @@ repeat_accept:
         if (ret < 0) {
             if (errno == EINTR){
                 goto repeat_accept;
-	    }
+	    	}
 	    printf("accept error errno=%d fd=%d\n", errno, fd);
         }
 	return ret;
@@ -131,8 +137,8 @@ int write_full(int fd, const void *buf, size_t count){
         if (ret < 0) {
             if (errno == EINTR){
                 continue;
-	    }
-	    printf("write error errno=%d fd=%d\n", errno, fd);
+	    	}
+	    	printf("write error errno=%d fd=%d\n", errno, fd);
             return ret;
         }
         else if (ret == 0){
@@ -156,8 +162,8 @@ int read_full(int fd, void *buf, size_t count){
         if (ret < 0) {
             if (errno == EINTR){ 
                 continue;
-	    } 
-	    printf("read error errno=%d fd=%d\n", errno, fd);
+	    	} 
+	    	printf("read error errno=%d fd=%d\n", errno, fd);
             return ret;
         }
         else if (ret == 0){

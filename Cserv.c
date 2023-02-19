@@ -36,6 +36,7 @@ int main(int argc, char *argv[]){
     char line[MAXLINE];
     int conn_fd[MAXCONN];   //list of Client connect
     int conn_id[MAXCONN];   //ID of connect
+    char id[500];
     int cindex = 0;
 
     fd_set base_rfds;
@@ -84,14 +85,10 @@ int main(int argc, char *argv[]){
 
                     printf("a new connection %d is made!\n", conn_fd[cindex]);
 
-                    conn_id[cindex] = 2323123;
-
-                    // char id[500];
-                    // sprintf(id, "cli-%d:>", conn_id[cindex]);
-                    // fflush(stdout);
-                    // write(conn_fd[cindex], id, 100);
-                    
-                    write(conn_fd[cindex], "LOVE", 5);
+                    conn_id[cindex] = rand() % 1000;
+                    sprintf(id, "cli-%d:> ", conn_id[cindex]);
+                    // sprintf(id, "%d", conn_id[cindex]);
+                    write(conn_fd[cindex], id, 100);
 
                     FD_SET(conn_fd[cindex] , &base_rfds); 
                     if(conn_fd[cindex] > fdmax){
@@ -124,19 +121,33 @@ int main(int argc, char *argv[]){
                     else{
                         printf("line = %s with n = %d charecters\n", line, n);
                         fflush(stdout);
+                        int id_anoClient = -1;
 
                         for(j = 0; j < cindex; j++){
 
-                            // char id[50];
                             // sprintf(id, "cli-%d:>", conn_id[cindex]);
-                            // write(conn_fd[j], id, n);
+                            // write(conn_fd[cindex], id, 100);
+                            if(conn_fd[j] == i){
+                                id_anoClient = conn_id[j];
+                                sprintf(id, "cli-%d:> ", conn_id[j]);
+                                m = write(conn_fd[j], id, n); //change 100 to MAXLINE
+                                printf("(Talk) write line = %s for m = %d charecters\n", line, m);
+                                fflush(stdout);
+                            }
+                        }
 
+                        for(j = 0; j < cindex; j++){
                             if(conn_fd[j] != -1 && conn_fd[j] != i){
-                                m = write(conn_fd[j], line, n);
+                                sprintf(id, "\ncli-%d says: %s", id_anoClient, line);
+                                m = write(conn_fd[j], id, n);
+                                sprintf(id, "cli-%d:> ", conn_id[j]);
+                                write(conn_fd[j], id, n);
+
                                 printf("write line = %s for m = %d charecters\n", line, m);
                                 fflush(stdout);
                             }
                         }
+
                     }
 
                 }
