@@ -56,6 +56,7 @@ int main(int argc, char *argv[]){
 
     listen(lis_fd, 5);
 
+    //Set every value in base_rfds and rfds are zero.
     FD_ZERO(&base_rfds);
     FD_ZERO(&rfds);
 

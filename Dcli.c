@@ -37,60 +37,62 @@ int main(int argc, char *argv[]){
 	fd_set base_rfds, rfds; 
     int fdmax = 0; 
     char line[MAXLINE];
-    char userid[500];
-
 
 	conn_fd = socket(AF_INET, SOCK_STREAM, 0); 
-
 	memset(&serv_addr, 0, sizeof(serv_addr));
 	serv_addr.sin_family = AF_INET;
 	serv_addr.sin_port = htons(SERV_PORT);
-	
 	serv_addr.sin_addr.s_addr = inet_addr(SERV_IP);
+
+	//The client requests a connection to the destination server.
     if (connect(conn_fd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0) { 
         perror("Problem in connecting to the server");
         exit(3);
     }
 
-    // read(conn_fd, client_id, MAXLINE);
-    // printf("%s", client_id);
-    // fflush(stdout);
-
 	FD_ZERO(&base_rfds);
 	FD_ZERO(&rfds);
 
-	// printf("cli-%d:> ", conn_fd);
-    // fflush(stdout);
-
-	FD_SET(fileno(stdin), &base_rfds); //focus input on keyborad
-	FD_SET(conn_fd, &base_rfds);
+	FD_SET(fileno(stdin), &base_rfds); //read data from the keyboard and then add into base_rfds.
+	FD_SET(conn_fd, &base_rfds);	   //add the value obtained from accepting the connection into base_rfds.
 
 	fdmax = conn_fd;
 
 	while(1){
-		memcpy(&rfds, &base_rfds, sizeof(fd_set)); // copy it
-		
-		// printf("cli-%d:> ", conn_fd);
-    	// fflush(stdout);
 
-		if (select(fdmax+1, &rfds, NULL, NULL, NULL) == -1) {
+		//Copy base_rfds to rfds
+		memcpy(&rfds, &base_rfds, sizeof(fd_set));
+
+		//Choose select system call for look at the least one event of interest in rfds
+		if (select(fdmax+1, &rfds, NULL, NULL, NULL) < 0) {
 			perror("select");
 			exit(4);
 		}
 	 	
+	 	//Check input on keyborad whether it exists in rfds. 
 	  	if(FD_ISSET(fileno(stdin), &rfds)){
+
+	  		//Use fgets() to receive values from the keyboard and store them in the variable 'line'.
 	        if(fgets(line, MAXLINE, stdin) == NULL){
-			    printf("Shutdown writing to TCP connection\n");
+
+	        	//If 'line' is equal to NULL, it means that EOF has been received.
+			    printf("\nShutdown writing to TCP connection\n");
+
+			    //Instruct the client to close the connection to the server using the shutdown system call.
 			    shutdown(conn_fd, SHUT_WR);
 			    client_shutdown_flag = 1;
 		    }
 		    else{
+
+		    	//If there is data coming from the keyboard, send it to the server.
 	            n = write_full(conn_fd, line, MAXLINE);
-	            //printf("send %s with n = %d characters\n", line, n);
 		    }
 	  	}
 
+	  	//Check if there is an event of interest occurring on conn_fd or not.
 		if(FD_ISSET(conn_fd, &rfds)){
+
+			//Read the data received from the server.
 			if((m = read_full(conn_fd, line, MAXLINE)) == 0){
 				if(client_shutdown_flag){
 					printf("TCP connection closed after client shutdown\n");
@@ -104,9 +106,7 @@ int main(int argc, char *argv[]){
 			}
 			else{
 				
-				// sprintf(userid, "cli-%s:> ", line);
-				// fputs(userid, stdout);
-				
+				//Read data from the server and display it on the client-side screen.
 				fputs(line, stdout);
 				fflush(stdout);
 			}
